@@ -6,9 +6,10 @@ import { ModalCreateProduct } from "./modal.create";
 import { ModalUpdateProduct } from "./modal.update";
 import { useEffect, useState } from "react";
 import { ProductService } from "@/services/product";
-import { Loader } from "lucide-react";
+import { Loader, SquarePen } from "lucide-react";
 import { HELPER } from "@/utils/helper";
 import { IMAGES } from "@/utils/image";
+import { DATA } from "@/utils/data.bk";
 
 export default function Blog() {
   const COUNT = 5;
@@ -46,18 +47,12 @@ export default function Blog() {
   };
 
   const init = async () => {
-    const res = await ProductService.getAll();
-    if (res && res.data.length > 0) {
-      render(res.data);
-      setIsLoading(false);
-    } else {
-      setData([]);
-      setIsLoading(false);
-    }
+    render(DATA.BLOG);
+    setIsLoading(false);
   };
 
   useEffect(() => {
-    // init();
+    init();
   }, []);
 
   useEffect(() => { }, [totalPage, isLoading, currenData, currenPage]);
@@ -68,7 +63,7 @@ export default function Blog() {
         <div className="flex">
           <div className="flex items-center flex-1">
             <h5>
-            <span className="text-gray-800 text-[20px] font-bold">
+              <span className="text-gray-800 text-[20px] font-bold">
                 DANH SÁCH BÀI VIẾT{" "}
                 <span className="text-indigo-600">({data?.length})</span>
               </span>
@@ -98,16 +93,16 @@ export default function Blog() {
                   <thead className="text-md text-gray-700 uppercase bg-gray-50 border dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                       <th scope="col" className="w-48 px-4 py-3">
-                        Tên sản phẩm
+                        Tiêu đề
                       </th>
                       <th scope="col" className="w-48 px-4 py-3">
                         Mô tả
                       </th>
                       <th scope="col" className="w-32 px-4 py-3">
-                        Danh mục
+                        Tác giả
                       </th>
                       <th scope="col" className="w-28 px-4 py-3">
-                        Giá
+                        Ngày phát hành
                       </th>
                       <th scope="col" className="w-24 px-4 py-3">
                         Chi tiết
@@ -125,35 +120,37 @@ export default function Blog() {
                         >
                           <td className="w-48 px-4 py-2 grid grid-cols-12 gap-3 items-center">
                             <Image
-                              src={item?.main_image}
+                              src={item?.thumbnail}
                               alt="img"
                               className="w-20 h-20 rounded-md object-cover col-span-6 border border-gray-300"
                               width={100}
                               height={0}
                             />
-                            <span className="w-full col-span-6 text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                              {item?.vietnam_name}
+                            <span className="w-[200px] col-span-6 text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
+                              {item?.title}
                             </span>
                           </td>
                           <td className="w-48 px-4 py-2">
                             <span className="text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                              <div
-                                dangerouslySetInnerHTML={{
-                                  __html: HELPER.sanitizeContent(
-                                    item?.vietnam_description
-                                  ),
-                                }}
-                              />
+                              {item?.description}
                             </span>
                           </td>
                           <td className="w-32 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {HELPER.renderCategory(item?.category)}
+                            {item?.author}
                           </td>
                           <td className="w-28 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {HELPER.formatVND(item?.price)}
+                            17-03-2025
                           </td>
                           <td className="w-24 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            <ModalUpdateProduct data={item} />
+                            {/* <ModalUpdateProduct data={item} /> */}
+                            <div className="flex">
+                              <div className="mx-2 p-2 cursor-pointer hover:bg-indigo-600 rounded-full group">
+                                <SquarePen
+                                  size={23}
+                                  className="text-gray-900 group-hover:text-white"
+                                />
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -195,8 +192,8 @@ export default function Blog() {
                           <a
                             href="#"
                             className={`${item === currenPage
-                                ? "bg-indigo-50 hover:bg-indigo-100 text-gray-700"
-                                : "bg-white"
+                              ? "bg-indigo-50 hover:bg-indigo-100 text-gray-700"
+                              : "bg-white"
                               } flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700`}
                           >
                             {item}
