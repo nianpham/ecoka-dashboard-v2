@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FileText, PackageOpen, LogOut, Newspaper, Users } from "lucide-react";
+import { FileText, PackageOpen, LogOut, Newspaper, Users, Sprout, Building2 } from "lucide-react";
 import { NavProjects } from "./nav-projects";
 import { TeamSwitcher } from "./team-switcher";
 import {
@@ -22,24 +22,24 @@ const data = {
       tab: "product",
       icon: <PackageOpen />,
     },
-    // {
-    //   name: "Đơn Hàng",
-    //   url: "?tab=order",
-    //   tab: "order",
-    //   icon: <FileText />,
-    // },
-    // {
-    //   name: "Bài Viết",
-    //   url: "?tab=blog",
-    //   tab: "blog",
-    //   icon: <Newspaper />,
-    // },
-    // {
-    //   name: "Khách Hàng",
-    //   url: "?tab=customer",
-    //   tab: "customer",
-    //   icon: <Users />,
-    // },
+    {
+      name: "ESG",
+      url: "?tab=esg",
+      tab: "esg",
+      icon: <Sprout />,
+    },
+    {
+      name: "Bài Viết",
+      url: "?tab=blog",
+      tab: "blog",
+      icon: <Newspaper />,
+    },
+    {
+      name: "Doanh Nghiệp",
+      url: "?tab=business",
+      tab: "business",
+      icon: <Building2 />,
+    },
   ],
 };
 

@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useSearchParams } from "next/navigation";
 import Product from "./modules/product";
+import ESG from "./modules/esg";
+import Blog from "./modules/blog";
+import Business from "./modules/business";
 
 export default function HomeClient() {
   const param = useSearchParams();
@@ -25,6 +28,12 @@ export default function HomeClient() {
     switch (tab) {
       case "product":
         return <Product />;
+      case "esg":
+        return <ESG />;
+      case "blog":
+        return <Blog />;
+      case "business":
+        return <Business />;
       default:
         return <Product />;
     }
@@ -34,6 +43,12 @@ export default function HomeClient() {
     switch (tab) {
       case "product":
         return "Sản Phẩm";
+      case "esg":
+        return "ESG";
+      case "blog":
+        return "Bài Viết";
+      case "business":
+        return "Doanh Nghiệp";
       default:
         return "Sản Phẩm";
     }
