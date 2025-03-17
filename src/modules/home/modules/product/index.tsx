@@ -14,7 +14,7 @@ export default function Product() {
   const COUNT = 5;
 
   const [data, setData] = useState([] as any);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [totalPage, setTotalPage] = useState<number>(0);
   const [currenPage, setCurrenPage] = useState<any>(1 as any);
   const [currenData, setCurrenData] = useState<any>([] as any);
@@ -57,10 +57,10 @@ export default function Product() {
   };
 
   useEffect(() => {
-    // init();
+    init();
   }, []);
 
-  useEffect(() => { }, [totalPage, isLoading, currenData, currenPage]);
+  useEffect(() => {}, [totalPage, isLoading, currenData, currenPage]);
 
   return (
     <section className="p-4">
@@ -92,9 +92,7 @@ export default function Product() {
                 width={100}
                 height={0}
               />
-              <p className="text-gray-500 text-lg mt-4">
-                Chưa có sản phẩm!
-              </p>
+              <p className="text-gray-500 text-lg mt-4">Chưa có sản phẩm!</p>
             </div>
           ) : (
             <>
@@ -102,20 +100,17 @@ export default function Product() {
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                   <thead className="text-md text-gray-700 uppercase bg-gray-50 border dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                      <th scope="col" className="w-64 px-4 py-3">
-                        Tên
+                      <th scope="col" className="w-48 px-4 py-3">
+                        Tên sản phẩm
+                      </th>
+                      <th scope="col" className="w-48 px-4 py-3">
+                        Mô tả
                       </th>
                       <th scope="col" className="w-32 px-4 py-3">
                         Danh mục
                       </th>
-                      <th scope="col" className="w-32 px-4 py-3">
-                        Màu
-                      </th>
-                      <th scope="col" className="w-32 px-4 py-3">
+                      <th scope="col" className="w-28 px-4 py-3">
                         Giá
-                      </th>
-                      <th scope="col" className="w-24 px-4 py-3">
-                        Đã bán
                       </th>
                       <th scope="col" className="w-24 px-4 py-3">
                         Chi tiết
@@ -128,54 +123,38 @@ export default function Product() {
                       return (
                         <tr
                           key={index}
-                          className={`${item?.deleted_at ? "hidden" : ""
-                            } border-b border-l border-r dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700`}
+                          className={`${
+                            item?.deleted_at ? "hidden" : ""
+                          } border-b border-l border-r dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700`}
                         >
-                          <td className="w-full px-4 py-2 grid grid-cols-12 gap-3 items-center">
+                          <td className="w-48 px-4 py-2 grid grid-cols-12 gap-3 items-center">
                             <Image
-                              src={item?.thumbnail}
+                              src={item?.main_image}
                               alt="img"
-                              className="w-20 h-20 rounded-md object-cover col-span-3 border border-gray-300"
+                              className="w-20 h-20 rounded-md object-cover col-span-6 border border-gray-300"
                               width={100}
                               height={0}
                             />
-                            <span className="w-full col-span-9 text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                              {item?.name}
+                            <span className="w-full col-span-6 text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
+                              {item?.vietnam_name}
                             </span>
                           </td>
-                          <td className="w-32 px-4 py-2">
-                            <span className="text-[14px] bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                              {HELPER.renderCategory(item?.category)}
+                          <td className="w-48 px-4 py-2">
+                            <span className="text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
+                              <div
+                                dangerouslySetInnerHTML={{
+                                  __html: HELPER.sanitizeContent(
+                                    item?.vietnam_description
+                                  ),
+                                }}
+                              />
                             </span>
-                          </td>
-                          <td className="w-32 px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            <div className="flex items-center">
-                              {item?.color?.map((color: any, index: any) => {
-                                return (
-                                  <div
-                                    key={index}
-                                    className={`border ${color === "white"
-                                        ? "border-gray-500"
-                                        : color === "black"
-                                          ? "border-black"
-                                          : color === "gold"
-                                            ? "border-yellow-500"
-                                            : color === "silver"
-                                              ? "border-neutral-300"
-                                              : "border-amber-900"
-                                      }  inline-block w-6 h-6 mr-2 ${HELPER.renderColor(
-                                        color
-                                      )} rounded-sm`}
-                                  ></div>
-                                );
-                              })}
-                            </div>
                           </td>
                           <td className="w-32 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {HELPER.formatVND(item?.price)}
+                            {HELPER.renderCategory(item?.category)}
                           </td>
-                          <td className="w-24 text-[14px] px-8 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {item?.sold}
+                          <td className="w-28 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            {HELPER.formatVND(item?.price)}
                           </td>
                           <td className="w-24 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             <ModalUpdateProduct data={item} />
@@ -219,10 +198,11 @@ export default function Product() {
                         <li key={index} onClick={() => selectPage(item)}>
                           <a
                             href="#"
-                            className={`${item === currenPage
+                            className={`${
+                              item === currenPage
                                 ? "bg-indigo-50 hover:bg-indigo-100 text-gray-700"
                                 : "bg-white"
-                              } flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700`}
+                            } flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700`}
                           >
                             {item}
                           </a>

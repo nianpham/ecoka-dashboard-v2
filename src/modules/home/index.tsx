@@ -17,9 +17,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useSearchParams } from "next/navigation";
 import Product from "./modules/product";
-import Order from "./modules/order";
-import Blog from "./modules/blog";
-import Customer from "./modules/customer";
 
 export default function HomeClient() {
   const param = useSearchParams();
@@ -28,12 +25,6 @@ export default function HomeClient() {
     switch (tab) {
       case "product":
         return <Product />;
-      case "order":
-        return <Order />;
-      case "blog":
-        return <Blog />;
-      case "customer":
-        return <Customer />;
       default:
         return <Product />;
     }
@@ -43,12 +34,6 @@ export default function HomeClient() {
     switch (tab) {
       case "product":
         return "Sản Phẩm";
-      case "order":
-        return "Đơn Hàng";
-      case "blog":
-        return "Bài Viết";
-      case "customer":
-        return "Khách Hàng";
       default:
         return "Sản Phẩm";
     }

@@ -24,7 +24,7 @@ const ProductDescriptionEditor = ({
   return (
     <div className="w-full space-y-2">
       <Label htmlFor="description">{title}</Label>
-      <div className="h-[500px]">
+      <div className="h-[400px]">
         {ReactQuill && (
           <ReactQuill
             ref={quillRef}
@@ -61,7 +61,7 @@ const ProductDescriptionEditor = ({
               "link",
               "image",
             ]}
-            className="h-[455px]"
+            className="h-[355px]"
             placeholder="Nhập nội dung ..."
           />
         )}

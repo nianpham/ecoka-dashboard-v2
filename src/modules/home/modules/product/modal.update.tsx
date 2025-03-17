@@ -19,76 +19,9 @@ import { ProductService } from "@/services/product";
 import { ImageUp, Loader, SquarePen, Trash2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Select from "react-select";
 import { UploadService } from "@/services/upload";
 
 export function ModalUpdateProduct({ data }: { data: any }) {
-  const colorMap: { [key: string]: string } = {
-    white: "#FFFFFF",
-    black: "#000000",
-    gold: "#EBB305",
-    silver: "#C0C0C0",
-    wood: "#713F11",
-  };
-
-  const colorOpt = [
-    { value: "white", label: "Trắng" },
-    { value: "black", label: "Đen" },
-    { value: "gold", label: "Gold" },
-    { value: "silver", label: "Bạc" },
-    { value: "wood", label: "Gỗ" },
-  ];
-
-  const customStyles = {
-    option: (provided: any, state: { isFocused: boolean }) => ({
-      ...provided,
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      backgroundColor: state.isFocused ? "#EEEEEE" : "white",
-      color: "black",
-      cursor: "pointer",
-    }),
-    control: (provided: any) => ({
-      ...provided,
-      borderColor: "#CFCFCF",
-      boxShadow: "none",
-      "&:hover": {
-        borderColor: "#CFCFCF",
-      },
-    }),
-  };
-
-  const formatOptionLabel = ({
-    value,
-    label,
-  }: {
-    value: string;
-    label: string;
-  }) => (
-    <div className="flex items-center gap-2">
-      <span
-        className={`w-4 h-4 rounded-sm border ${
-          value === "white"
-            ? "border-gray-500"
-            : value === "black"
-            ? "border-black"
-            : value === "gold"
-            ? "border-yellow-500"
-            : value === "silver"
-            ? "border-neutral-300"
-            : "border-amber-900"
-        } }`}
-        style={{ backgroundColor: colorMap[value] }}
-      ></span>
-      {label}
-    </div>
-  );
-
-  const selectedColors = colorOpt.filter((color) =>
-    data?.color?.includes(color.value)
-  );
-
   const { toast } = useToast();
 
   const mainImageInputRef = useRef<HTMLInputElement>(null);
@@ -100,12 +33,14 @@ export function ModalUpdateProduct({ data }: { data: any }) {
   const [mainPreview, setMainPreview] = useState<string | null>(null);
   const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
 
-  const [name, setName] = useState<string>("");
+  const [nameVN, setNameVN] = useState<string>("");
+  const [nameEN, setNameEN] = useState<string>("");
+  const [nameJP, setNameJP] = useState<string>("");
   const [price, setPrice] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [introduction, setIntroduction] = useState<string>("");
+  const [descriptionVN, setDescriptionVN] = useState<string>("");
+  const [descriptionEN, setDescriptionEN] = useState<string>("");
+  const [descriptionJP, setDescriptionJP] = useState<string>("");
   const [category, setCategory] = useState<string>("");
-  const [color, setColor] = useState<string[]>(data?.color ?? []);
 
   const handleMainImageChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -165,11 +100,6 @@ export function ModalUpdateProduct({ data }: { data: any }) {
     setSecondaryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleColorChange = (selectedOptions: any) => {
-    const selectedValues = selectedOptions.map((option: any) => option.value);
-    setColor(selectedValues);
-  };
-
   const validateForm = () => {
     if (!mainPreview) {
       toast({
@@ -187,26 +117,48 @@ export function ModalUpdateProduct({ data }: { data: any }) {
       return false;
     }
 
-    if (!name.trim()) {
+    if (!nameVN.trim()) {
       toast({
         variant: "destructive",
-        title: "Vui lòng nhập tên.",
+        title: "Vui lòng nhập tên tiếng Việt.",
+      });
+      return false;
+    }
+    if (!nameEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Anh.",
+      });
+      return false;
+    }
+    if (!nameJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Nhật.",
       });
       return false;
     }
 
-    if (!description.trim()) {
+    if (!descriptionVN.trim()) {
       toast({
         variant: "destructive",
-        title: "Vui lòng nhập mô tả.",
+        title: "Vui lòng nhập mô tả tiếng Việt.",
       });
       return false;
     }
 
-    if (!introduction.trim()) {
+    if (!descriptionEN.trim()) {
       toast({
         variant: "destructive",
-        title: "Vui lòng nhập phần giới thiệu.",
+        title: "Vui lòng nhập mô tả tiếng Anh.",
+      });
+      return false;
+    }
+
+    if (!descriptionJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Nhật.",
       });
       return false;
     }
@@ -215,14 +167,6 @@ export function ModalUpdateProduct({ data }: { data: any }) {
       toast({
         variant: "destructive",
         title: "Vui lòng chọn danh mục.",
-      });
-      return false;
-    }
-
-    if (!color) {
-      toast({
-        variant: "destructive",
-        title: "Vui lòng chọn màu sắc.",
       });
       return false;
     }
@@ -293,51 +237,63 @@ export function ModalUpdateProduct({ data }: { data: any }) {
     if (!validateForm()) return;
     setIsLoading(true);
 
-    const updatedDescription = await replaceBase64WithCloudUrls(
-      description,
+    const updatedDescriptionVN = await replaceBase64WithCloudUrls(
+      descriptionVN,
       handleImageUpload
     );
-    const updatedIntroduction = await replaceBase64WithCloudUrls(
-      introduction,
+    const updatedDescriptionEN = await replaceBase64WithCloudUrls(
+      descriptionEN,
+      handleImageUpload
+    );
+    const updatedDescriptionJP = await replaceBase64WithCloudUrls(
+      descriptionJP,
       handleImageUpload
     );
 
     const body = {
-      name: name,
-      description: updatedDescription,
-      introduction: updatedIntroduction,
+      vietnam_name: nameVN,
+      english_name: nameEN,
+      japan_name: nameJP,
+      vietnam_description: updatedDescriptionVN,
+      english_description: updatedDescriptionEN,
+      japan_description: updatedDescriptionJP,
       price: price,
       category: category,
-      color: color,
-      thumbnail: mainPreview,
-      images: secondaryPreviews,
+      main_image: mainPreview,
+      side_images: secondaryPreviews,
     };
     await ProductService.updateProduct(data?._id, body);
     setIsLoading(false);
-    window.location.href = "/?tab=product";
+    window.location.href = "/";
   };
 
   const handleDelete = async () => {
     setIsLoadingForDelete(true);
     await ProductService.deleteProduct(data?._id);
     setIsLoadingForDelete(false);
-    window.location.href = "/?tab=product";
+    window.location.href = "/";
   };
 
   const updateDOM = () => {
     if (data) {
-      setName(data?.name);
+      setNameVN(data?.vietnam_name);
+      setNameEN(data?.english_name);
+      setNameJP(data?.japan_name);
       setPrice(data?.price);
       setCategory(data?.category);
-      setColor(data?.color);
-      setDescription(data?.description);
-      setIntroduction(data?.introduction);
-      setMainPreview(data?.thumbnail);
-      setSecondaryPreviews(data?.images);
+      setDescriptionVN(data?.vietnam_description);
+      setDescriptionEN(data?.english_description);
+      setDescriptionJP(data?.japan_description);
+      setMainPreview(data?.main_image);
+      setSecondaryPreviews(data?.side_images);
     }
   };
 
-  useEffect(() => {}, [data]);
+  useEffect(() => {
+    console.log("data", data);
+
+    updateDOM();
+  }, [data]);
 
   return (
     <Dialog>
@@ -352,7 +308,7 @@ export function ModalUpdateProduct({ data }: { data: any }) {
         </div>
       </DialogTrigger>
       <DialogContent
-        className="sm:max-w-[1200px] max-h-[90vh]"
+        className="sm:max-w-[1200px] max-h-[100vh]"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -465,15 +421,39 @@ export function ModalUpdateProduct({ data }: { data: any }) {
           <div className="col-span-2">
             <div className="flex flex-col justify-start items-start gap-2 overflow-y-auto max-h-[70vh] pr-0 scroll-bar-style">
               <Label htmlFor="description" className="text-[14.5px]">
-                Tên sản phẩm
+                Tên sản phẩm tiếng Việt
               </Label>
               <div className="w-full grid items-center gap-4">
                 <textarea
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Tên sản phẩm"
-                  className="col-span-3 p-2 border border-[#CFCFCF] rounded placeholder-custom focus:border-gray-500"
+                  id="nameVN"
+                  value={nameVN}
+                  onChange={(e) => setNameVN(e.target.value)}
+                  placeholder="Tên sản phẩm tiếng Việt"
+                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
+                ></textarea>
+              </div>
+              <Label htmlFor="description" className="text-[14.5px]">
+                Tên sản phẩm tiếng Anh
+              </Label>
+              <div className="w-full grid items-center gap-4">
+                <textarea
+                  id="nameEN"
+                  value={nameEN}
+                  onChange={(e) => setNameEN(e.target.value)}
+                  placeholder="Tên sản phẩm tiếng Anh"
+                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
+                ></textarea>
+              </div>
+              <Label htmlFor="description" className="text-[14.5px]">
+                Tên sản phẩm tiếng Nhật
+              </Label>
+              <div className="w-full grid items-center gap-4">
+                <textarea
+                  id="nameJP"
+                  value={nameJP}
+                  onChange={(e) => setNameJP(e.target.value)}
+                  placeholder="Tên sản phẩm tiếng Nhật"
+                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
                 ></textarea>
               </div>
               <Label htmlFor="description" className="text-[14.5px] mt-2">
@@ -489,9 +469,10 @@ export function ModalUpdateProduct({ data }: { data: any }) {
                   className="col-span-3 p-2 border border-[#CFCFCF] rounded placeholder-custom focus:border-gray-500"
                 >
                   <option value="">Chọn danh mục</option>
-                  <option value="Plastic">Plastic</option>
-                  <option value="Frame">Khung ảnh</option>
-                  <option value="Album">Album</option>
+                  <option value="kitchen">Nhà bếp</option>
+                  <option value="pet-house">Nhà thú cưng</option>
+                  <option value="fashion">Thời trang</option>
+                  <option value="home-decor">Trang trí nhà cửa</option>
                 </select>
               </div>
               <Label htmlFor="description" className="text-[14.5px] mt-2">
@@ -506,35 +487,26 @@ export function ModalUpdateProduct({ data }: { data: any }) {
                   className="col-span-3 p-2 border rounded border-[#CFCFCF] placeholder-custom focus:border-gray-500"
                 ></input>
               </div>
-              <Label htmlFor="description" className="text-[14.5px] mt-2">
-                Chọn màu sắc
-              </Label>
-              <div className="w-full grid items-center gap-4">
-                <Select
-                  className="pl-[0.5px]"
-                  options={colorOpt}
-                  value={colorOpt.filter((colorOptItem) =>
-                    color.includes(colorOptItem.value)
-                  )}
-                  isMulti={true}
-                  placeholder="Chọn màu"
-                  onChange={handleColorChange}
-                  styles={customStyles}
-                  formatOptionLabel={formatOptionLabel}
+
+              <div className="w-full mt-2">
+                <ProductDescriptionEditor
+                  value={descriptionVN}
+                  onChange={setDescriptionVN}
+                  title="Mô tả sản phẩm tiếng Việt"
                 />
               </div>
               <div className="w-full mt-2">
                 <ProductDescriptionEditor
-                  value={description}
-                  onChange={setDescription}
-                  title="Mô tả sản phẩm"
+                  value={descriptionEN}
+                  onChange={setDescriptionEN}
+                  title="Mô tả sản phẩm tiếng Anh"
                 />
               </div>
               <div className="w-full mt-2">
                 <ProductDescriptionEditor
-                  value={introduction}
-                  onChange={setIntroduction}
-                  title="Giới thiệu sản phẩm"
+                  value={descriptionJP}
+                  onChange={setDescriptionJP}
+                  title="Mô tả sản phẩm tiếng Nhật"
                 />
               </div>
             </div>
