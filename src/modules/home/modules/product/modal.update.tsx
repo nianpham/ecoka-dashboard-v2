@@ -481,6 +481,7 @@ export function ModalUpdateProduct({ data }: { data: any }) {
               <div className="w-full grid items-center gap-4">
                 <input
                   id="price"
+                  type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="Giá"
