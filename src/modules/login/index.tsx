@@ -32,7 +32,7 @@ export default function LoginClient() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
     setIsLoading(true);
-    if (username === "ecoka" && password === "Ecoka@6789") {
+    if (username === "admin@ecoka.vn" && password === "Ecoka@6789") {
       setTimeout(() => {
         Cookies.set("isLogin", "true", { expires: 7 });
         window.location.href = ROUTES.HOME;
