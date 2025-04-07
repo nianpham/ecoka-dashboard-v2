@@ -42,11 +42,13 @@ export function ModalUpdateProduct({ data }: { data: any }) {
   const [descriptionJP, setDescriptionJP] = useState<string>("");
   const [category, setCategory] = useState<string>("");
 
-  const handleMainImageChange = (
+  const handleMainImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Validate file size and type
     if (file.size > 5 * 1024 * 1024) {
       alert("File quá lớn. Vui lòng chọn file nhỏ hơn 5MB");
       return;
@@ -55,19 +57,40 @@ export function ModalUpdateProduct({ data }: { data: any }) {
       alert("Vui lòng chọn file hình ảnh");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setMainPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+
+    try {
+      const uploadResponse = await UploadService.uploadToCloudinary([file]);
+      if (
+        uploadResponse &&
+        Array.isArray(uploadResponse) &&
+        uploadResponse[0]
+      ) {
+        const cloudUrl = uploadResponse[0].secure_url;
+        setMainPreview(cloudUrl);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Không thể tải ảnh lên",
+        });
+      }
+    } catch (error) {
+      console.error("Main image upload failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi khi tải ảnh chính lên",
+      });
+    }
   };
 
-  const handleSecondaryImagesChange = (
+  const handleSecondaryImagesChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+
     const newPreviews: string[] = [];
+    const validFiles: File[] = [];
+
     Array.from(files).forEach((file) => {
       if (file.size > 5 * 1024 * 1024) {
         alert(`File ${file.name} quá lớn. Vui lòng chọn file nhỏ hơn 5MB.`);
@@ -77,15 +100,36 @@ export function ModalUpdateProduct({ data }: { data: any }) {
         alert(`File ${file.name} không phải là hình ảnh.`);
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newPreviews.push(reader.result as string);
-        if (newPreviews.length === files.length) {
-          setSecondaryPreviews((prev) => [...prev, ...newPreviews]);
-        }
-      };
-      reader.readAsDataURL(file);
+      validFiles.push(file);
     });
+
+    if (validFiles.length === 0) return;
+
+    try {
+      const uploadResponse = await UploadService.uploadToCloudinary(validFiles);
+
+      if (uploadResponse && Array.isArray(uploadResponse)) {
+        const newUrls = uploadResponse
+          .map((res) => res?.secure_url)
+          .filter(Boolean);
+        newPreviews.push(...newUrls);
+
+        if (newPreviews.length > 0) {
+          setSecondaryPreviews((prev) => [...prev, ...newPreviews]);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Không thể tải các ảnh phụ lên",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Secondary images upload failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi khi tải ảnh phụ lên",
+      });
+    }
   };
 
   const handleUpdateMainImage = () => {
