@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -14,39 +15,33 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ProductService } from "@/services/product";
-import { UploadService } from "@/services/upload";
-import { ImageUp, Loader, Plus, Upload, X } from "lucide-react";
+import { Loader, Upload } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useRef, useState } from "react";
-import Select from "react-select";
-import "@/styles/scroll-hiding.css";
-import "@/styles/placeholder.css";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { UploadService } from "@/services/upload";
+import { ESGService } from "@/services/esg";
 
-export function ModalCreateProduct() {
+export function ModalUpdateESG({ data }: { data: any }) {
   const { toast } = useToast();
 
   const mainImageInputRef = useRef<HTMLInputElement>(null);
-  const secondaryImageInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [mainPreview, setMainPreview] = useState<string | null>(null);
-  const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
-
   const [nameVN, setNameVN] = useState<string>("");
   const [nameEN, setNameEN] = useState<string>("");
   const [nameJP, setNameJP] = useState<string>("");
-  const [price, setPrice] = useState<string>("");
   const [descriptionVN, setDescriptionVN] = useState<string>("");
   const [descriptionEN, setDescriptionEN] = useState<string>("");
   const [descriptionJP, setDescriptionJP] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
 
-  const handleMainImageChange = (
+  const handleMainImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     if (file.size > 5 * 1024 * 1024) {
       alert("File quá lớn. Vui lòng chọn file nhỏ hơn 5MB");
       return;
@@ -55,49 +50,33 @@ export function ModalCreateProduct() {
       alert("Vui lòng chọn file hình ảnh");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setMainPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const handleSecondaryImagesChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    const newPreviews: string[] = [];
-    Array.from(files).forEach((file) => {
-      // if (file.size > 5 * 1024 * 1024) {
-      //     alert(`File ${file.name} quá lớn. Vui lòng chọn file nhỏ hơn 5MB.`);
-      //     return;
-      // }
-      if (!file.type.startsWith("image/")) {
-        alert(`File ${file.name} không phải là hình ảnh.`);
-        return;
+    try {
+      const uploadResponse = await UploadService.uploadToCloudinary([file]);
+      if (
+        uploadResponse &&
+        Array.isArray(uploadResponse) &&
+        uploadResponse[0]
+      ) {
+        const cloudUrl = uploadResponse[0].secure_url;
+        setMainPreview(cloudUrl);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Không thể tải ảnh lên",
+        });
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newPreviews.push(reader.result as string);
-        if (newPreviews.length === files.length) {
-          setSecondaryPreviews((prev) => [...prev, ...newPreviews]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    } catch (error) {
+      console.error("Main image upload failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi khi tải ảnh chính lên",
+      });
+    }
   };
 
   const handleUpdateMainImage = () => {
     mainImageInputRef.current?.click();
-  };
-
-  const handleUpdateSecondaryImages = () => {
-    secondaryImageInputRef.current?.click();
-  };
-
-  const handleRemoveSecondaryImage = (index: number) => {
-    setSecondaryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const validateForm = () => {
@@ -105,14 +84,6 @@ export function ModalCreateProduct() {
       toast({
         variant: "destructive",
         title: "Vui lòng chọn ảnh chính.",
-      });
-      return false;
-    }
-
-    if (secondaryPreviews.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Vui lòng thêm ít nhất một ảnh phụ.",
       });
       return false;
     }
@@ -159,14 +130,6 @@ export function ModalCreateProduct() {
       toast({
         variant: "destructive",
         title: "Vui lòng nhập mô tả tiếng Nhật.",
-      });
-      return false;
-    }
-
-    if (!category.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Vui lòng chọn danh mục.",
       });
       return false;
     }
@@ -250,39 +213,47 @@ export function ModalCreateProduct() {
       handleImageUpload
     );
 
-    const uploadMainImage: any = await UploadService.uploadToCloudinary([
-      mainPreview,
-    ]);
-    const uploadSecondaryImages: any = await UploadService.uploadToCloudinary(
-      secondaryPreviews
-    );
     const body = {
-      vietnam_name: nameVN,
-      english_name: nameEN,
-      japan_name: nameJP,
-      vietnam_description: updatedDescriptionVN,
-      english_description: updatedDescriptionEN,
-      japan_description: updatedDescriptionJP,
-      price: price,
-      category: category,
-      main_image: uploadMainImage[0]?.url || "",
-      side_images: uploadSecondaryImages?.map((image: any) => image.url),
+      name_vn: nameVN,
+      name_en: nameEN,
+      name_jp: nameJP,
+      description_vn: updatedDescriptionVN,
+      description_en: updatedDescriptionEN,
+      description_jp: updatedDescriptionJP,
+      thumbnail: mainPreview,
     };
-
-    await ProductService.createProduct(body);
+    await ESGService.updateESG(data?._id, body);
     setIsLoading(false);
-    window.location.href = "/";
+    window.location.href = "/?tab=esg";
   };
+
+  const updateDOM = () => {
+    if (data) {
+      setNameVN(data?.name_vn);
+      setNameEN(data?.name_en);
+      setNameJP(data?.name_jp);
+      setDescriptionVN(data?.description_vn);
+      setDescriptionEN(data?.description_en);
+      setDescriptionJP(data?.description_jp);
+      setMainPreview(data?.thumbnail);
+    }
+  };
+
+  useEffect(() => {
+    updateDOM();
+  }, [data]);
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center justify-center text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-        >
-          <Plus size={16} className="mr-2" /> Thêm sản phẩm
-        </button>
+      <DialogTrigger onClick={updateDOM}>
+        <div className="w-full ">
+          <button
+            type="button"
+            className="flex items-center justify-center text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+          >
+            Đổi thông tin
+          </button>
+        </div>
       </DialogTrigger>
       <DialogContent
         className="sm:max-w-[1200px] max-h-[100vh]"
@@ -290,13 +261,17 @@ export function ModalCreateProduct() {
       >
         <DialogHeader>
           <DialogTitle>
-            <span className="!text-[20px]">Thêm sản phẩm mới</span>
+            <span className="!text-[20px]">
+              Chỉnh sửa thông tin{" "}
+              <span className="lowercase">{data?.name_vn}</span>
+            </span>
           </DialogTitle>
           <DialogDescription>
             <span className="!text-[16px]">
-              Điền thông tin sản phẩm và nhấn{" "}
-              <strong className="text-indigo-600">Lưu</strong> để tạo sản phẩm
-              mới.
+              Chỉnh sửa thông tin mục{" "}
+              <span className="lowercase">{data?.name_vn}</span> và nhấn{" "}
+              <strong className="text-indigo-600">Cập nhật</strong> để lưu thông
+              tin.
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -337,7 +312,7 @@ export function ModalCreateProduct() {
                             <Upload
                               onClick={handleUpdateMainImage}
                               color="white"
-                              size={30}
+                              size={26}
                             />
                           </div>
                         </div>
@@ -353,52 +328,12 @@ export function ModalCreateProduct() {
                   )}
                 </div>
               </div>
-              <Label htmlFor="images" className="text-right !text-[16px]">
-                Hình phụ
-              </Label>
-              <div className="col-span-3 mt-2">
-                <div
-                  onClick={handleUpdateSecondaryImages}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-white py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 hover:text-primary-700 cursor-pointer"
-                >
-                  <div className="flex flex-col items-center">
-                    <span>+ Tải lên</span>
-                  </div>
-                </div>
-                <input
-                  type="file"
-                  ref={secondaryImageInputRef}
-                  onChange={handleSecondaryImagesChange}
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-3 mt-4 pr-2">
-                {secondaryPreviews.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <Image
-                      src={preview}
-                      alt={`secondary-preview-${index}`}
-                      className="rounded-sm border border-gray-200 w-full h-28 object-cover"
-                      width={100}
-                      height={100}
-                    />
-                    <button
-                      onClick={() => handleRemoveSecondaryImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full text-xs"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
           <div className="col-span-2">
             <div className="flex flex-col justify-start items-start gap-2 overflow-y-auto max-h-[70vh] pr-0 scroll-bar-style">
-              <Label htmlFor="description" className="text-[14.5px]">
-                Tên sản phẩm tiếng Việt
+              {/* <Label htmlFor="description" className="text-[14.5px]">
+                Tên tiếng Việt
               </Label>
               <div className="w-full grid items-center gap-4">
                 <textarea
@@ -408,9 +343,9 @@ export function ModalCreateProduct() {
                   placeholder="Tên sản phẩm tiếng Việt"
                   className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
                 ></textarea>
-              </div>
-              <Label htmlFor="description" className="text-[14.5px]">
-                Tên sản phẩm tiếng Anh
+              </div> */}
+              {/* <Label htmlFor="description" className="text-[14.5px]">
+                Tên tiếng Anh
               </Label>
               <div className="w-full grid items-center gap-4">
                 <textarea
@@ -420,9 +355,9 @@ export function ModalCreateProduct() {
                   placeholder="Tên sản phẩm tiếng Anh"
                   className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
                 ></textarea>
-              </div>
-              <Label htmlFor="description" className="text-[14.5px]">
-                Tên sản phẩm tiếng Nhật
+              </div> */}
+              {/* <Label htmlFor="description" className="text-[14.5px]">
+                Tên tiếng Nhật
               </Label>
               <div className="w-full grid items-center gap-4">
                 <textarea
@@ -432,60 +367,70 @@ export function ModalCreateProduct() {
                   placeholder="Tên sản phẩm tiếng Nhật"
                   className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
                 ></textarea>
-              </div>
-              <Label htmlFor="description" className="text-[14.5px] mt-2">
-                Chọn danh mục
+              </div> */}
+              <Label htmlFor="description" className="text-[14.5px]">
+                Mô tả tiếng Việt
               </Label>
               <div className="w-full grid items-center gap-4">
-                <select
-                  id="category"
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                  }}
-                  className="col-span-3 p-2 border border-[#CFCFCF] rounded"
-                >
-                  <option value="">Chọn danh mục</option>
-                  <option value="kitchen">Nhà bếp</option>
-                  <option value="pet-house">Nhà thú cưng</option>
-                  <option value="fashion">Thời trang</option>
-                  <option value="home-decor">Trang trí nhà cửa</option>
-                </select>
+                <textarea
+                  id="descriptionVN"
+                  value={descriptionVN}
+                  onChange={(e) => setDescriptionVN(e.target.value)}
+                  placeholder="Mô tả tiếng Việt"
+                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
+                  rows={6}
+                ></textarea>
               </div>
-              <Label htmlFor="description" className="text-[14.5px] mt-2">
-                Giá sản phẩm
+              <Label htmlFor="description" className="text-[14.5px]">
+                Mô tả tiếng Anh
               </Label>
               <div className="w-full grid items-center gap-4">
-                <input
-                  id="price"
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="Giá"
-                  className="col-span-3 p-2 border border-[#CFCFCF] rounded placeholder-custom focus:border-gray-500"
-                ></input>
+                <textarea
+                  id="descriptionEN"
+                  value={descriptionEN}
+                  onChange={(e) => setDescriptionEN(e.target.value)}
+                  placeholder="Mô tả tiếng Anh"
+                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
+                  rows={6}
+                ></textarea>
+              </div>
+              <Label htmlFor="description" className="text-[14.5px]">
+                Mô tả tiếng Nhật
+              </Label>
+              <div className="w-full grid items-center gap-4">
+                <textarea
+                  id="descriptionJP"
+                  value={descriptionJP}
+                  onChange={(e) => setDescriptionJP(e.target.value)}
+                  placeholder="Mô tả tiếng Nhật"
+                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
+                  rows={6}
+                ></textarea>
               </div>
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button
-              type="button"
-              variant="secondary"
-              className="!px-10 !text-[16px]"
+        <DialogFooter className="w-full !flex !flex-row !justify-between !items-center">
+          <div></div>
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="secondary"
+                className="!px-10 !text-[16px]"
+              >
+                Huỷ
+              </Button>
+            </DialogClose>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="flex flex-row justify-center items-center gap-2 text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm !px-10 !text-[16px] py-2.5 text-center"
             >
-              Huỷ
-            </Button>
-          </DialogClose>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="flex flex-row justify-center items-center gap-2 text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-md text-sm !px-10 !text-[16px] py-2.5 text-center"
-          >
-            Lưu
-            {isLoading && <Loader className="animate-spin" size={17} />}
-          </button>
+              Cập nhật
+              {isLoading && <Loader className="animate-spin" size={17} />}
+            </button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

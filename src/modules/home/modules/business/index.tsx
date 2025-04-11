@@ -1,66 +1,49 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import Image from "next/image";
-import { ModalCreateProduct } from "./modal.create";
-import { ModalUpdateProduct } from "./modal.update";
 import { useEffect, useState } from "react";
-import { ProductService } from "@/services/product";
-import { Loader } from "lucide-react";
-import { HELPER } from "@/utils/helper";
-import { IMAGES } from "@/utils/image";
+import { EnterpriseService } from "@/services/enterprise";
+import { ModalUpdateEnterprise } from "./modal.update";
+
+interface EnterpriseProps {
+  _id: string;
+  name_vn: string;
+  name_en: string;
+  name_jp: string;
+  phone: string;
+  email: string;
+  description_vn: string;
+  description_en: string;
+  description_jp: string;
+  address_vn: string;
+  address_en: string;
+  address_jp: string;
+}
 
 export default function Business() {
-  const COUNT = 5;
-
-  const [data, setData] = useState([] as any);
+  const [data, setData] = useState({} as EnterpriseProps);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [totalPage, setTotalPage] = useState<number>(0);
-  const [currenPage, setCurrenPage] = useState<any>(1 as any);
-  const [currenData, setCurrenData] = useState<any>([] as any);
-
-  const selectPage = (pageSelected: any) => {
-    setCurrenPage(pageSelected);
-    const start = (pageSelected - 1) * COUNT;
-    const end = pageSelected * COUNT;
-    setCurrenData(data.slice(start, end));
-  };
-
-  const prevPage = () => {
-    if (currenPage > 1) {
-      selectPage(currenPage - 1);
-    }
-  };
-
-  const nextPage = () => {
-    if (currenPage < totalPage) {
-      selectPage(currenPage + 1);
-    }
-  };
+  const [currenData, setCurrenData] = useState<any>({} as EnterpriseProps);
 
   const render = (data: any) => {
     setData(data);
-    setTotalPage(Math.ceil(data.length / COUNT));
-    setCurrenPage(1);
-    setCurrenData(data.slice(0, COUNT));
+    setCurrenData(data);
   };
 
   const init = async () => {
-    const res = await ProductService.getAll();
+    const res = await EnterpriseService.getAll();
     if (res && res.data.length > 0) {
-      render(res.data);
+      render(res.data[0]);
       setIsLoading(false);
     } else {
-      setData([]);
+      setData({} as EnterpriseProps);
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // init();
+    init();
   }, []);
-
-  useEffect(() => { }, [totalPage, isLoading, currenData, currenPage]);
 
   return (
     <section className="p-4">
@@ -93,7 +76,8 @@ export default function Business() {
                         name="companyName"
                         id="companyName"
                         placeholder="ECOKA HANDICRAFTS"
-                        defaultValue={"CÔNG TY CỔ PHẦN ECOKA"}
+                        defaultValue={data?.name_vn}
+                        disabled
                       />
                     </div>
                     <div className="w-full sm:w-1/2">
@@ -109,7 +93,8 @@ export default function Business() {
                         name="phoneNumber"
                         id="phoneNumber"
                         placeholder="Số điện thoại"
-                        defaultValue={"(+84) 973 998 068"}
+                        defaultValue={data?.phone}
+                        disabled
                       />
                     </div>
                   </div>
@@ -127,7 +112,8 @@ export default function Business() {
                         name="emailAddress"
                         id="emailAddress"
                         placeholder="abc@gmail.com"
-                        defaultValue={"info@ecoka.vn"}
+                        defaultValue={data?.email}
+                        disabled
                       />
                     </div>
                     <div className="w-full sm:w-1/2">
@@ -143,7 +129,8 @@ export default function Business() {
                         name="address"
                         id="address"
                         placeholder="Địa chỉ"
-                        defaultValue={"Ấp 2, Xã Vĩnh Thuận Đông, Huyện Long Mỹ, Tỉnh Hậu Giang"}
+                        defaultValue={data?.address_vn}
+                        disabled
                       />
                     </div>
                   </div>
@@ -159,16 +146,12 @@ export default function Business() {
                       name="desc"
                       id="desc"
                       rows={4}
-                      defaultValue={"CÔNG TY CỔ PHẦN ECOKA. Là công ty sản xuất và thương mại các sản phẩm thủ công mỹ nghệ truyền thống từ các nguyên liệu 100% từ thiên nhiên như: lục bình."}
+                      defaultValue={data?.description_vn}
+                      disabled
                     ></textarea>
                   </div>
                   <div className="flex justify-end gap-4.5 mt-2">
-                    <button
-                      type="button"
-                      className="flex items-center justify-center text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                    >
-                      Cập nhật thông tin
-                    </button>
+                    <ModalUpdateEnterprise data={data} />
                   </div>
                 </div>
               </div>
