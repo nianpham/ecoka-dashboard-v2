@@ -13,55 +13,17 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ProductService } from "@/services/product";
-import { Loader, Plus, SquarePen, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Loader, Plus } from "lucide-react";
+import { useCallback, useState } from "react";
 import { UploadService } from "@/services/upload";
 import BlogSetion from "./blog-section";
 import { BlogService } from "@/services/blog";
 import { Label } from "@radix-ui/react-label";
 
-interface BlogProps {
-  _id: string;
-  author: string;
-  s1_title_vn: string;
-  s1_title_en: string;
-  s1_title_jp: string;
-  s1_content_vn: string;
-  s1_content_en: string;
-  s1_content_jp: string;
-  s1_thumbnail: string;
-  s2_title_vn: string;
-  s2_title_en: string;
-  s2_title_jp: string;
-  s2_content_vn: string;
-  s2_content_en: string;
-  s2_content_jp: string;
-  s2_thumbnail: string;
-  s3_title_vn: string;
-  s3_title_en: string;
-  s3_title_jp: string;
-  s3_content_vn: string;
-  s3_content_en: string;
-  s3_content_jp: string;
-  s3_thumbnail: string;
-  s4_content_en: string;
-  s4_content_jp: string;
-  s4_content_vn: string;
-  s4_thumbnail: string;
-  s4_title_en: string;
-  s4_title_jp: string;
-  s4_title_vn: string;
-  created_at: string;
-}
-
 export function ModalCreateBlog() {
   const { toast } = useToast();
 
-  const mainImageInputRef = useRef<HTMLInputElement>(null);
-
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isLoadingForDelete, setIsLoadingForDelete] = useState<boolean>(false);
 
   const [selectedSection, setSelectedSection] = useState<number>(1);
 
