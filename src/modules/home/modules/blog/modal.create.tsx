@@ -465,15 +465,13 @@ export function ModalCreateBlog() {
       s4_thumbnail: mainPreview4,
     };
 
-    console.log("Submitting payload:", body);
-
     try {
       await BlogService.createBlog(body);
     } catch (error) {
       toast({ variant: "destructive", title: "Cập nhật thất bại!" });
     }
     setIsLoading(false);
-    // window.location.href = "/?tab=blog";
+    window.location.href = "/?tab=blog";
   };
 
   const handleSectionUpdate = (
