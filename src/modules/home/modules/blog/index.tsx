@@ -2,23 +2,56 @@
 "use client";
 
 import Image from "next/image";
-import { ModalCreateProduct } from "./modal.create";
-import { ModalUpdateProduct } from "./modal.update";
 import { useEffect, useState } from "react";
-import { ProductService } from "@/services/product";
 import { Loader, SquarePen } from "lucide-react";
-import { HELPER } from "@/utils/helper";
 import { IMAGES } from "@/utils/image";
-import { DATA } from "@/utils/data.bk";
+import { BlogService } from "@/services/blog";
+import { HELPER } from "@/utils/helper";
+import { ModalUpdateBlog } from "./modal.update";
+import { ModalCreateBlog } from "./modal.create";
+
+interface BlogProps {
+  _id: string;
+  author: string;
+  s1_title_vn: string;
+  s1_title_en: string;
+  s1_title_jp: string;
+  s1_content_vn: string;
+  s1_content_en: string;
+  s1_content_jp: string;
+  s1_thumbnail: string;
+  s2_title_vn: string;
+  s2_title_en: string;
+  s2_title_jp: string;
+  s2_content_vn: string;
+  s2_content_en: string;
+  s2_content_jp: string;
+  s2_thumbnail: string;
+  s3_title_vn: string;
+  s3_title_en: string;
+  s3_title_jp: string;
+  s3_content_vn: string;
+  s3_content_en: string;
+  s3_content_jp: string;
+  s3_thumbnail: string;
+  s4_content_en: string;
+  s4_content_jp: string;
+  s4_content_vn: string;
+  s4_thumbnail: string;
+  s4_title_en: string;
+  s4_title_jp: string;
+  s4_title_vn: string;
+  created_at: string;
+}
 
 export default function Blog() {
   const COUNT = 5;
 
-  const [data, setData] = useState([] as any);
+  const [data, setData] = useState([] as BlogProps[]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [totalPage, setTotalPage] = useState<number>(0);
   const [currenPage, setCurrenPage] = useState<any>(1 as any);
-  const [currenData, setCurrenData] = useState<any>([] as any);
+  const [currenData, setCurrenData] = useState<any>([] as BlogProps[]);
 
   const selectPage = (pageSelected: any) => {
     setCurrenPage(pageSelected);
@@ -47,15 +80,21 @@ export default function Blog() {
   };
 
   const init = async () => {
-    render(DATA.BLOG);
-    setIsLoading(false);
+    const res = await BlogService.getAll();
+    if (res && res.data.length > 0) {
+      render(res.data);
+      setIsLoading(false);
+    } else {
+      setData([]);
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     init();
   }, []);
 
-  useEffect(() => { }, [totalPage, isLoading, currenData, currenPage]);
+  useEffect(() => {}, [totalPage, isLoading, currenData, currenPage]);
 
   return (
     <section className="p-4">
@@ -68,6 +107,9 @@ export default function Blog() {
                 <span className="text-indigo-600">({data?.length})</span>
               </span>
             </h5>
+          </div>
+          <div className="flex flex-col flex-shrink-0 space-y-3 md:flex-row md:items-center lg:justify-end md:space-y-0 md:space-x-3">
+            <ModalCreateBlog />
           </div>
         </div>
         <div className="h-[640px] flex flex-col justify-between">
@@ -113,44 +155,32 @@ export default function Blog() {
                   <tbody>
                     {currenData?.map((item: any, index: any) => {
                       return (
-                        <tr
-                          key={index}
-                          className={`${item?.deleted_at ? "hidden" : ""
-                            } border-b border-l border-r dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700`}
-                        >
+                        <tr key={index}>
                           <td className="w-48 px-4 py-2 grid grid-cols-12 gap-3 items-center">
                             <Image
-                              src={item?.thumbnail}
+                              src={item?.s1_thumbnail}
                               alt="img"
                               className="w-20 h-20 rounded-md object-cover col-span-6 border border-gray-300"
                               width={100}
                               height={0}
                             />
                             <span className="w-[200px] col-span-6 text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                              {item?.title}
+                              {item?.s1_title_vn}
                             </span>
                           </td>
                           <td className="w-48 px-4 py-2">
                             <span className="text-[14px] line-clamp-2 bg-primary-100 text-gray-900 font-medium py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">
-                              {item?.description}
+                              {item?.s1_content_vn}
                             </span>
                           </td>
                           <td className="w-32 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             {item?.author}
                           </td>
                           <td className="w-28 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            17-03-2025
+                            {HELPER.formatDate(item?.created_at)}
                           </td>
                           <td className="w-24 text-[14px] px-4 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            {/* <ModalUpdateProduct data={item} /> */}
-                            <div className="flex">
-                              <div className="mx-2 p-2 cursor-pointer hover:bg-indigo-600 rounded-full group">
-                                <SquarePen
-                                  size={23}
-                                  className="text-gray-900 group-hover:text-white"
-                                />
-                              </div>
-                            </div>
+                            <ModalUpdateBlog data={item} />
                           </td>
                         </tr>
                       );
@@ -191,10 +221,11 @@ export default function Blog() {
                         <li key={index} onClick={() => selectPage(item)}>
                           <a
                             href="#"
-                            className={`${item === currenPage
-                              ? "bg-indigo-50 hover:bg-indigo-100 text-gray-700"
-                              : "bg-white"
-                              } flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700`}
+                            className={`${
+                              item === currenPage
+                                ? "bg-indigo-50 hover:bg-indigo-100 text-gray-700"
+                                : "bg-white"
+                            } flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700`}
                           >
                             {item}
                           </a>

@@ -12,161 +12,305 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ProductService } from "@/services/product";
-import { ImageUp, Loader, SquarePen, Trash2, Upload, X } from "lucide-react";
-import Image from "next/image";
+import { Loader, SquarePen, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { UploadService } from "@/services/upload";
+import BlogSetion from "./blog-section";
+import { BlogService } from "@/services/blog";
+import { Label } from "@radix-ui/react-label";
 
-export function ModalUpdateProduct({ data }: { data: any }) {
+interface BlogProps {
+  _id: string;
+  author: string;
+  s1_title_vn: string;
+  s1_title_en: string;
+  s1_title_jp: string;
+  s1_content_vn: string;
+  s1_content_en: string;
+  s1_content_jp: string;
+  s1_thumbnail: string;
+  s2_title_vn: string;
+  s2_title_en: string;
+  s2_title_jp: string;
+  s2_content_vn: string;
+  s2_content_en: string;
+  s2_content_jp: string;
+  s2_thumbnail: string;
+  s3_title_vn: string;
+  s3_title_en: string;
+  s3_title_jp: string;
+  s3_content_vn: string;
+  s3_content_en: string;
+  s3_content_jp: string;
+  s3_thumbnail: string;
+  s4_content_en: string;
+  s4_content_jp: string;
+  s4_content_vn: string;
+  s4_thumbnail: string;
+  s4_title_en: string;
+  s4_title_jp: string;
+  s4_title_vn: string;
+  created_at: string;
+}
+
+export function ModalUpdateBlog({ data }: { data: BlogProps }) {
   const { toast } = useToast();
 
   const mainImageInputRef = useRef<HTMLInputElement>(null);
-  const secondaryImageInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingForDelete, setIsLoadingForDelete] = useState<boolean>(false);
 
+  const [selectedSection, setSelectedSection] = useState<number>(1);
+
+  const [s1_titleVN, setS1TitleVN] = useState<string>("");
+  const [s1_titleEN, setS1TitleEN] = useState<string>("");
+  const [s1_titleJP, setS1TitleJP] = useState<string>("");
+
+  const [s2_titleVN, setS2TitleVN] = useState<string>("");
+  const [s2_titleEN, setS2TitleEN] = useState<string>("");
+  const [s2_titleJP, setS2TitleJP] = useState<string>("");
+
+  const [s3_titleVN, setS3TitleVN] = useState<string>("");
+  const [s3_titleEN, setS3TitleEN] = useState<string>("");
+  const [s3_titleJP, setS3TitleJP] = useState<string>("");
+
+  const [s4_titleVN, setS4TitleVN] = useState<string>("");
+  const [s4_titleEN, setS4TitleEN] = useState<string>("");
+  const [s4_titleJP, setS4TitleJP] = useState<string>("");
+
+  const [s1_contentVN, setS1ContentVN] = useState<string>("");
+  const [s1_contentEN, setS1ContentEN] = useState<string>("");
+  const [s1_contentJP, setS1ContentJP] = useState<string>("");
+
+  const [s2_contentVN, setS2ContentVN] = useState<string>("");
+  const [s2_contentEN, setS2ContentEN] = useState<string>("");
+  const [s2_contentJP, setS2ContentJP] = useState<string>("");
+
+  const [s3_contentVN, setS3ContentVN] = useState<string>("");
+  const [s3_contentEN, setS3ContentEN] = useState<string>("");
+  const [s3_contentJP, setS3ContentJP] = useState<string>("");
+
+  const [s4_contentVN, setS4ContentVN] = useState<string>("");
+  const [s4_contentEN, setS4ContentEN] = useState<string>("");
+  const [s4_contentJP, setS4ContentJP] = useState<string>("");
+
+  const [author, setAuthor] = useState<string>("");
   const [mainPreview, setMainPreview] = useState<string | null>(null);
-  const [secondaryPreviews, setSecondaryPreviews] = useState<string[]>([]);
-
-  const [nameVN, setNameVN] = useState<string>("");
-  const [nameEN, setNameEN] = useState<string>("");
-  const [nameJP, setNameJP] = useState<string>("");
-  const [price, setPrice] = useState<string>("");
-  const [descriptionVN, setDescriptionVN] = useState<string>("");
-  const [descriptionEN, setDescriptionEN] = useState<string>("");
-  const [descriptionJP, setDescriptionJP] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
-
-  const handleMainImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File quá lớn. Vui lòng chọn file nhỏ hơn 5MB");
-      return;
-    }
-    if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chọn file hình ảnh");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setMainPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSecondaryImagesChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    const newPreviews: string[] = [];
-    Array.from(files).forEach((file) => {
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`File ${file.name} quá lớn. Vui lòng chọn file nhỏ hơn 5MB.`);
-        return;
-      }
-      if (!file.type.startsWith("image/")) {
-        alert(`File ${file.name} không phải là hình ảnh.`);
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newPreviews.push(reader.result as string);
-        if (newPreviews.length === files.length) {
-          setSecondaryPreviews((prev) => [...prev, ...newPreviews]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleUpdateMainImage = () => {
-    mainImageInputRef.current?.click();
-  };
-
-  const handleUpdateSecondaryImages = () => {
-    secondaryImageInputRef.current?.click();
-  };
-
-  const handleRemoveSecondaryImage = (index: number) => {
-    setSecondaryPreviews((prev) => prev.filter((_, i) => i !== index));
-  };
+  const [mainPreview2, setMainPreview2] = useState<string | null>(null);
+  const [mainPreview3, setMainPreview3] = useState<string | null>(null);
+  const [mainPreview4, setMainPreview4] = useState<string | null>(null);
 
   const validateForm = () => {
+    // Section 1
     if (!mainPreview) {
       toast({
         variant: "destructive",
-        title: "Vui lòng chọn ảnh chính.",
+        title: "Vui lòng chọn ảnh chính cho mục 1.",
+      });
+      return false;
+    }
+    if (!s1_titleVN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Việt cho mục 1.",
+      });
+      return false;
+    }
+    if (!s1_titleEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Anh cho mục 1.",
+      });
+      return false;
+    }
+    if (!s1_titleJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Nhật cho mục 1.",
+      });
+      return false;
+    }
+    if (!s1_contentVN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Việt cho mục 1.",
+      });
+      return false;
+    }
+    if (!s1_contentEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Anh cho mục 1.",
+      });
+      return false;
+    }
+    if (!s1_contentJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Nhật cho mục 1.",
       });
       return false;
     }
 
-    if (secondaryPreviews.length === 0) {
+    // Section 2
+    if (!mainPreview2) {
       toast({
         variant: "destructive",
-        title: "Vui lòng thêm ít nhất một ảnh phụ.",
+        title: "Vui lòng chọn ảnh chính cho mục 2.",
+      });
+      return false;
+    }
+    if (!s2_titleVN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Việt cho mục 2.",
+      });
+      return false;
+    }
+    if (!s2_titleEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Anh cho mục 2.",
+      });
+      return false;
+    }
+    if (!s2_titleJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Nhật cho mục 2.",
+      });
+      return false;
+    }
+    if (!s2_contentVN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Việt cho mục 2.",
+      });
+      return false;
+    }
+    if (!s2_contentEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Anh cho mục 2.",
+      });
+      return false;
+    }
+    if (!s2_contentJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Nhật cho mục 2.",
       });
       return false;
     }
 
-    if (!nameVN.trim()) {
+    // Section 3
+    if (!mainPreview3) {
       toast({
         variant: "destructive",
-        title: "Vui lòng nhập tên tiếng Việt.",
+        title: "Vui lòng chọn ảnh chính cho mục 3.",
       });
       return false;
     }
-    if (!nameEN.trim()) {
+    if (!s3_titleVN.trim()) {
       toast({
         variant: "destructive",
-        title: "Vui lòng nhập tên tiếng Anh.",
+        title: "Vui lòng nhập tên tiếng Việt cho mục 3.",
       });
       return false;
     }
-    if (!nameJP.trim()) {
+    if (!s3_titleEN.trim()) {
       toast({
         variant: "destructive",
-        title: "Vui lòng nhập tên tiếng Nhật.",
+        title: "Vui lòng nhập tên tiếng Anh cho mục 3.",
+      });
+      return false;
+    }
+    if (!s3_titleJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Nhật cho mục 3.",
+      });
+      return false;
+    }
+    if (!s3_contentVN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Việt cho mục 3.",
+      });
+      return false;
+    }
+    if (!s3_contentEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Anh cho mục 3.",
+      });
+      return false;
+    }
+    if (!s3_contentJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Nhật cho mục 3.",
       });
       return false;
     }
 
-    if (!descriptionVN.trim()) {
+    // Section 4
+    if (!mainPreview4) {
       toast({
         variant: "destructive",
-        title: "Vui lòng nhập mô tả tiếng Việt.",
+        title: "Vui lòng chọn ảnh chính cho mục 4.",
+      });
+      return false;
+    }
+    if (!s4_titleVN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Việt cho mục 4.",
+      });
+      return false;
+    }
+    if (!s4_titleEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Anh cho mục 4.",
+      });
+      return false;
+    }
+    if (!s4_titleJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập tên tiếng Nhật cho mục 4.",
+      });
+      return false;
+    }
+    if (!s4_contentVN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Việt cho mục 4.",
+      });
+      return false;
+    }
+    if (!s4_contentEN.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Anh cho mục 4.",
+      });
+      return false;
+    }
+    if (!s4_contentJP.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Vui lòng nhập mô tả tiếng Nhật cho mục 4.",
       });
       return false;
     }
 
-    if (!descriptionEN.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Vui lòng nhập mô tả tiếng Anh.",
-      });
-      return false;
-    }
-
-    if (!descriptionJP.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Vui lòng nhập mô tả tiếng Nhật.",
-      });
-      return false;
-    }
-
-    if (!category.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Vui lòng chọn danh mục.",
-      });
+    // Author check
+    if (!author.trim()) {
+      toast({ variant: "destructive", title: "Vui lòng chọn danh mục." });
       return false;
     }
 
@@ -236,63 +380,191 @@ export function ModalUpdateProduct({ data }: { data: any }) {
     if (!validateForm()) return;
     setIsLoading(true);
 
-    const updatedDescriptionVN = await replaceBase64WithCloudUrls(
-      descriptionVN,
-      handleImageUpload
-    );
-    const updatedDescriptionEN = await replaceBase64WithCloudUrls(
-      descriptionEN,
-      handleImageUpload
-    );
-    const updatedDescriptionJP = await replaceBase64WithCloudUrls(
-      descriptionJP,
-      handleImageUpload
-    );
+    const updatedContent = {
+      s1_content_vn: await replaceBase64WithCloudUrls(
+        s1_contentVN,
+        handleImageUpload
+      ),
+      s1_content_en: await replaceBase64WithCloudUrls(
+        s1_contentEN,
+        handleImageUpload
+      ),
+      s1_content_jp: await replaceBase64WithCloudUrls(
+        s1_contentJP,
+        handleImageUpload
+      ),
+      s2_content_vn: await replaceBase64WithCloudUrls(
+        s2_contentVN,
+        handleImageUpload
+      ),
+      s2_content_en: await replaceBase64WithCloudUrls(
+        s2_contentEN,
+        handleImageUpload
+      ),
+      s2_content_jp: await replaceBase64WithCloudUrls(
+        s2_contentJP,
+        handleImageUpload
+      ),
+      s3_content_vn: await replaceBase64WithCloudUrls(
+        s3_contentVN,
+        handleImageUpload
+      ),
+      s3_content_en: await replaceBase64WithCloudUrls(
+        s3_contentEN,
+        handleImageUpload
+      ),
+      s3_content_jp: await replaceBase64WithCloudUrls(
+        s3_contentJP,
+        handleImageUpload
+      ),
+      s4_content_vn: await replaceBase64WithCloudUrls(
+        s4_contentVN,
+        handleImageUpload
+      ),
+      s4_content_en: await replaceBase64WithCloudUrls(
+        s4_contentEN,
+        handleImageUpload
+      ),
+      s4_content_jp: await replaceBase64WithCloudUrls(
+        s4_contentJP,
+        handleImageUpload
+      ),
+    };
 
     const body = {
-      vietnam_name: nameVN,
-      english_name: nameEN,
-      japan_name: nameJP,
-      vietnam_description: updatedDescriptionVN,
-      english_description: updatedDescriptionEN,
-      japan_description: updatedDescriptionJP,
-      price: price,
-      category: category,
-      main_image: mainPreview,
-      side_images: secondaryPreviews,
+      author,
+      s1_title_vn: s1_titleVN,
+      s1_title_en: s1_titleEN,
+      s1_title_jp: s1_titleJP,
+      s1_content_vn: updatedContent.s1_content_vn,
+      s1_content_en: updatedContent.s1_content_en,
+      s1_content_jp: updatedContent.s1_content_jp,
+      s1_thumbnail: mainPreview,
+      s2_title_vn: s2_titleVN,
+      s2_title_en: s2_titleEN,
+      s2_title_jp: s2_titleJP,
+      s2_content_vn: updatedContent.s2_content_vn,
+      s2_content_en: updatedContent.s2_content_en,
+      s2_content_jp: updatedContent.s2_content_jp,
+      s2_thumbnail: mainPreview2,
+      s3_title_vn: s3_titleVN,
+      s3_title_en: s3_titleEN,
+      s3_title_jp: s3_titleJP,
+      s3_content_vn: updatedContent.s3_content_vn,
+      s3_content_en: updatedContent.s3_content_en,
+      s3_content_jp: updatedContent.s3_content_jp,
+      s3_thumbnail: mainPreview3,
+      s4_title_vn: s4_titleVN,
+      s4_title_en: s4_titleEN,
+      s4_title_jp: s4_titleJP,
+      s4_content_vn: updatedContent.s4_content_vn,
+      s4_content_en: updatedContent.s4_content_en,
+      s4_content_jp: updatedContent.s4_content_jp,
+      s4_thumbnail: mainPreview4,
     };
-    await ProductService.updateProduct(data?._id, body);
+
+    try {
+      await BlogService.updateBlog(data?._id, body);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Cập nhật thất bại!" });
+    }
     setIsLoading(false);
-    window.location.href = "/";
+    window.location.href = "/?tab=blog";
   };
 
   const handleDelete = async () => {
     setIsLoadingForDelete(true);
-    await ProductService.deleteProduct(data?._id);
+    await BlogService.deleteBlog(data?._id);
     setIsLoadingForDelete(false);
-    window.location.href = "/";
+    window.location.href = "/?tab=blog";
   };
 
   const updateDOM = () => {
     if (data) {
-      setNameVN(data?.vietnam_name);
-      setNameEN(data?.english_name);
-      setNameJP(data?.japan_name);
-      setPrice(data?.price);
-      setCategory(data?.category);
-      setDescriptionVN(data?.vietnam_description);
-      setDescriptionEN(data?.english_description);
-      setDescriptionJP(data?.japan_description);
-      setMainPreview(data?.main_image);
-      setSecondaryPreviews(data?.side_images);
+      setS1TitleVN(data?.s1_title_vn);
+      setS1TitleEN(data?.s1_title_en);
+      setS1TitleJP(data?.s1_title_jp);
+      setS2TitleVN(data?.s2_title_vn);
+      setS2TitleEN(data?.s2_title_en);
+      setS2TitleJP(data?.s2_title_jp);
+      setS3TitleVN(data?.s3_title_vn);
+      setS3TitleEN(data?.s3_title_en);
+      setS3TitleJP(data?.s3_title_jp);
+      setS4TitleVN(data?.s4_title_vn);
+      setS4TitleEN(data?.s4_title_en);
+      setS4TitleJP(data?.s4_title_jp);
+      setAuthor(data?.author);
+      setS1ContentVN(data?.s1_content_vn);
+      setS1ContentEN(data?.s1_content_en);
+      setS1ContentJP(data?.s1_content_jp);
+      setS2ContentVN(data?.s2_content_vn);
+      setS2ContentEN(data?.s2_content_en);
+      setS2ContentJP(data?.s2_content_jp);
+      setS3ContentVN(data?.s3_content_vn);
+      setS3ContentEN(data?.s3_content_en);
+      setS3ContentJP(data?.s3_content_jp);
+      setS4ContentVN(data?.s4_content_vn);
+      setS4ContentEN(data?.s4_content_en);
+      setS4ContentJP(data?.s4_content_jp);
+      setMainPreview(data?.s1_thumbnail);
+      setMainPreview2(data?.s2_thumbnail);
+      setMainPreview3(data?.s3_thumbnail);
+      setMainPreview4(data?.s4_thumbnail);
     }
   };
 
   useEffect(() => {
-    console.log("data", data);
-
     updateDOM();
   }, [data]);
+
+  const handleSectionUpdate = (
+    section: number,
+    updates: {
+      thumbnail?: string | null;
+      stitleVN?: string;
+      stitleEN?: string;
+      stitleJP?: string;
+      scontentVN?: string;
+      scontentEN?: string;
+      scontentJP?: string;
+      author?: string;
+    }
+  ) => {
+    if (section === 1) {
+      setMainPreview(updates.thumbnail ?? mainPreview);
+      setS1TitleVN(updates.stitleVN ?? s1_titleVN);
+      setS1TitleEN(updates.stitleEN ?? s1_titleEN);
+      setS1TitleJP(updates.stitleJP ?? s1_titleJP);
+      setS1ContentVN(updates.scontentVN ?? s1_contentVN);
+      setS1ContentEN(updates.scontentEN ?? s1_contentEN);
+      setS1ContentJP(updates.scontentJP ?? s1_contentJP);
+    } else if (section === 2) {
+      setMainPreview2(updates.thumbnail ?? mainPreview2);
+      setS2TitleVN(updates.stitleVN ?? s2_titleVN);
+      setS2TitleEN(updates.stitleEN ?? s2_titleEN);
+      setS2TitleJP(updates.stitleJP ?? s2_titleJP);
+      setS2ContentVN(updates.scontentVN ?? s2_contentVN);
+      setS2ContentEN(updates.scontentEN ?? s2_contentEN);
+      setS2ContentJP(updates.scontentJP ?? s2_contentJP);
+    } else if (section === 3) {
+      setMainPreview3(updates.thumbnail ?? mainPreview3);
+      setS3TitleVN(updates.stitleVN ?? s3_titleVN);
+      setS3TitleEN(updates.stitleEN ?? s3_titleEN);
+      setS3TitleJP(updates.stitleJP ?? s3_titleJP);
+      setS3ContentVN(updates.scontentVN ?? s3_contentVN);
+      setS3ContentEN(updates.scontentEN ?? s3_contentEN);
+      setS3ContentJP(updates.scontentJP ?? s3_contentJP);
+    } else if (section === 4) {
+      setMainPreview4(updates.thumbnail ?? mainPreview4);
+      setS4TitleVN(updates.stitleVN ?? s4_titleVN);
+      setS4TitleEN(updates.stitleEN ?? s4_titleEN);
+      setS4TitleJP(updates.stitleJP ?? s4_titleJP);
+      setS4ContentVN(updates.scontentVN ?? s4_contentVN);
+      setS4ContentEN(updates.scontentEN ?? s4_contentEN);
+      setS4ContentJP(updates.scontentJP ?? s4_contentJP);
+    }
+    if (updates.author) setAuthor(updates.author);
+  };
 
   return (
     <Dialog>
@@ -322,172 +594,116 @@ export function ModalUpdateProduct({ data }: { data: any }) {
             </span>
           </DialogDescription>
         </DialogHeader>
-        <div className="w-full grid grid-cols-3 gap-8">
-          <div className="col-span-1">
-            <div className="overflow-y-auto max-h-[70vh] scroll-bar-style">
-              <div className="mb-6">
-                <Label htmlFor="thumbnail" className="text-right !text-[16px]">
-                  Hình chính
-                </Label>
-                <div className="mt-2">
-                  {!mainPreview && (
-                    <div
-                      onClick={handleUpdateMainImage}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-white px-5 py-16 text-sm font-medium text-gray-900 hover:bg-gray-50 hover:text-primary-700 cursor-pointer"
-                    >
-                      <div className="flex flex-col items-center">
-                        <span>+ Tải hình lên</span>
-                        <span className="text-xs text-gray-500">
-                          hoặc kéo thả file vào đây
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={mainImageInputRef}
-                    onChange={handleMainImageChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  {mainPreview && (
-                    <div className="mt-2">
-                      <div className="relative group w-full h-80">
-                        <div className="absolute top-0 left-0 right-0 bottom-0 group-hover:bg-black rounded-md opacity-25 z-0 transform duration-200"></div>
-                        <div className="cursor-pointer absolute top-[43%] left-[43%] hidden group-hover:flex z-10 transform duration-200">
-                          <div className="bg-indigo-600 hover:bg-indigo-700 p-2 rounded-full">
-                            <Upload
-                              onClick={handleUpdateMainImage}
-                              color="white"
-                              size={26}
-                            />
-                          </div>
-                        </div>
-                        <Image
-                          src={mainPreview}
-                          alt="main-preview"
-                          className="w-full h-full object-cover rounded-md mt-2 border border-gray-200"
-                          width={1000}
-                          height={1000}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+        <div>
+          <div className="flex flex-row justify-between items-center mb-4">
+            <div className="flex flex-row gap-3 mb-4">
+              <div
+                className={`cursor-pointer ${
+                  selectedSection === 1
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-100 text-black"
+                }  px-5 py-2 rounded-xl hover:bg-indigo-600 hover:text-white`}
+                onClick={() => setSelectedSection(1)}
+              >
+                Section 1
               </div>
-              <Label htmlFor="images" className="text-right !text-[16px]">
-                Hình phụ
-              </Label>
-              <div className="col-span-3 mt-2">
-                <div
-                  onClick={handleUpdateSecondaryImages}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-white py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 hover:text-primary-700 cursor-pointer"
-                >
-                  <div className="flex flex-col items-center">
-                    <span>+ Tải lên</span>
-                  </div>
-                </div>
-                <input
-                  type="file"
-                  ref={secondaryImageInputRef}
-                  onChange={handleSecondaryImagesChange}
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                />
+              <div
+                className={`cursor-pointer ${
+                  selectedSection === 2
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-100 text-black"
+                }  px-5 py-2 rounded-xl hover:bg-indigo-600 hover:text-white`}
+                onClick={() => setSelectedSection(2)}
+              >
+                Section 2
               </div>
-              <div className="grid grid-cols-3 gap-3 mt-4 pr-2">
-                {secondaryPreviews?.map((preview: any, index: any) => (
-                  <div key={index} className="relative">
-                    <Image
-                      src={preview}
-                      alt={`secondary-preview-${index}`}
-                      className="rounded-sm border border-gray-200 w-full h-28 object-cover"
-                      width={1000}
-                      height={1000}
-                    />
-                    <button
-                      onClick={() => handleRemoveSecondaryImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full text-xs"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
+              <div
+                className={`cursor-pointer ${
+                  selectedSection === 3
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-100 text-black"
+                }  px-5 py-2 rounded-xl hover:bg-indigo-600 hover:text-white`}
+                onClick={() => setSelectedSection(3)}
+              >
+                Section 3
+              </div>
+              <div
+                className={`cursor-pointer ${
+                  selectedSection === 4
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-100 text-black"
+                }  px-5 py-2 rounded-xl hover:bg-indigo-600 hover:text-white`}
+                onClick={() => setSelectedSection(4)}
+              >
+                Section 4
               </div>
             </div>
-          </div>
-          <div className="col-span-2">
-            <div className="flex flex-col justify-start items-start gap-2 overflow-y-auto max-h-[70vh] pr-0 scroll-bar-style">
-              <Label htmlFor="description" className="text-[14.5px]">
-                Tên sản phẩm tiếng Việt
+            <div className="flex flex-row gap-3">
+              <Label
+                htmlFor="author"
+                className="text-[14.5px] mt-2 w-full text-center"
+              >
+                Tên tác giả
               </Label>
-              <div className="w-full grid items-center gap-4">
-                <textarea
-                  id="nameVN"
-                  value={nameVN}
-                  onChange={(e) => setNameVN(e.target.value)}
-                  placeholder="Tên sản phẩm tiếng Việt"
-                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
-                ></textarea>
-              </div>
-              <Label htmlFor="description" className="text-[14.5px]">
-                Tên sản phẩm tiếng Anh
-              </Label>
-              <div className="w-full grid items-center gap-4">
-                <textarea
-                  id="nameEN"
-                  value={nameEN}
-                  onChange={(e) => setNameEN(e.target.value)}
-                  placeholder="Tên sản phẩm tiếng Anh"
-                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
-                ></textarea>
-              </div>
-              <Label htmlFor="description" className="text-[14.5px]">
-                Tên sản phẩm tiếng Nhật
-              </Label>
-              <div className="w-full grid items-center gap-4">
-                <textarea
-                  id="nameJP"
-                  value={nameJP}
-                  onChange={(e) => setNameJP(e.target.value)}
-                  placeholder="Tên sản phẩm tiếng Nhật"
-                  className="col-span-3 p-2 border border-[#CFCFCF] placeholder-custom rounded"
-                ></textarea>
-              </div>
-              <Label htmlFor="description" className="text-[14.5px] mt-2">
-                Chọn danh mục
-              </Label>
-              <div className="w-full grid items-center gap-4">
-                <select
-                  id="category"
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                  }}
-                  className="col-span-3 p-2 border border-[#CFCFCF] rounded placeholder-custom focus:border-gray-500"
-                >
-                  <option value="">Chọn danh mục</option>
-                  <option value="kitchen">Nhà bếp</option>
-                  <option value="pet-house">Nhà thú cưng</option>
-                  <option value="fashion">Thời trang</option>
-                  <option value="home-decor">Trang trí nhà cửa</option>
-                </select>
-              </div>
-              <Label htmlFor="description" className="text-[14.5px] mt-2">
-                Giá sản phẩm
-              </Label>
-              <div className="w-full grid items-center gap-4">
+              <div className="w-52 items-center">
                 <input
-                  id="price"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="Giá"
+                  id="author"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  placeholder="Tác giả"
                   className="col-span-3 p-2 border rounded border-[#CFCFCF] placeholder-custom focus:border-gray-500"
                 ></input>
               </div>
             </div>
           </div>
+          {selectedSection === 1 && (
+            <BlogSetion
+              thumbnail={mainPreview}
+              stitleVN={s1_titleVN}
+              stitleEN={s1_titleEN}
+              stitleJP={s1_titleJP}
+              scontentVN={s1_contentVN}
+              scontentEN={s1_contentEN}
+              scontentJP={s1_contentJP}
+              onChange={(updates) => handleSectionUpdate(1, updates)}
+            />
+          )}
+          {selectedSection === 2 && (
+            <BlogSetion
+              thumbnail={mainPreview2}
+              stitleVN={s2_titleVN}
+              stitleEN={s2_titleEN}
+              stitleJP={s2_titleJP}
+              scontentVN={s2_contentVN}
+              scontentEN={s2_contentEN}
+              scontentJP={s2_contentJP}
+              onChange={(updates) => handleSectionUpdate(2, updates)}
+            />
+          )}
+          {selectedSection === 3 && (
+            <BlogSetion
+              thumbnail={mainPreview3}
+              stitleVN={s3_titleVN}
+              stitleEN={s3_titleEN}
+              stitleJP={s3_titleJP}
+              scontentVN={s3_contentVN}
+              scontentEN={s3_contentEN}
+              scontentJP={s3_contentJP}
+              onChange={(updates) => handleSectionUpdate(3, updates)}
+            />
+          )}
+          {selectedSection === 4 && (
+            <BlogSetion
+              thumbnail={mainPreview4}
+              stitleVN={s4_titleVN}
+              stitleEN={s4_titleEN}
+              stitleJP={s4_titleJP}
+              scontentVN={s4_contentVN}
+              scontentEN={s4_contentEN}
+              scontentJP={s4_contentJP}
+              onChange={(updates) => handleSectionUpdate(4, updates)}
+            />
+          )}
         </div>
         <DialogFooter className="w-full !flex !flex-row !justify-between !items-center">
           <Button

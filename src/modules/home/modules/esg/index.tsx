@@ -42,8 +42,6 @@ export default function ESG() {
     init();
   }, []);
 
-  // useEffect(() => {}, [totalPage, isLoading, currenData, currenPage]);
-
   return (
     <section className="p-4">
       <div className="relative overflow-hidden">
