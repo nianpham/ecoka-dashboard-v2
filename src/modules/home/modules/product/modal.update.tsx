@@ -16,10 +16,11 @@ import ProductDescriptionEditor from "./quill";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ProductService } from "@/services/product";
-import { ImageUp, Loader, SquarePen, Trash2, Upload, X } from "lucide-react";
+import { Loader, SquarePen, Trash2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { UploadService } from "@/services/upload";
+import "@/styles/scroll-hiding.css";
 
 export function ModalUpdateProduct({ data }: { data: any }) {
   const { toast } = useToast();
@@ -41,6 +42,7 @@ export function ModalUpdateProduct({ data }: { data: any }) {
   const [descriptionEN, setDescriptionEN] = useState<string>("");
   const [descriptionJP, setDescriptionJP] = useState<string>("");
   const [category, setCategory] = useState<string>("");
+  const [isShow, setIsShow] = useState<boolean>(data?.show_status === "show");
 
   const handleMainImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -218,6 +220,42 @@ export function ModalUpdateProduct({ data }: { data: any }) {
     return true;
   };
 
+  const validateShowStatus = async () => {
+    if (!isShow || data?.show_status === "show") {
+      return true;
+    }
+
+    try {
+      const products = await ProductService.getAll();
+      const shownProducts = products.data.filter(
+        (product: any) =>
+          product.category === category &&
+          product.show_status === "show" &&
+          product._id !== data?._id
+      );
+
+      console.log("shownProducts", shownProducts);
+
+      if (shownProducts.length >= 4) {
+        toast({
+          variant: "destructive",
+          title: "Chỉ được phép có 4 sản phẩm hiển thị trong một danh mục.",
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error validating show status:", error);
+      console.log("Error validating show status:", error);
+
+      toast({
+        variant: "destructive",
+        title: "Lỗi khi kiểm tra trạng thái hiển thị.",
+      });
+      return false;
+    }
+  };
+
   const handleImageUpload = useCallback(async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -279,6 +317,7 @@ export function ModalUpdateProduct({ data }: { data: any }) {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
+    if (!(await validateShowStatus())) return;
     setIsLoading(true);
 
     const updatedDescriptionVN = await replaceBase64WithCloudUrls(
@@ -305,6 +344,7 @@ export function ModalUpdateProduct({ data }: { data: any }) {
       category: category,
       main_image: mainPreview,
       side_images: secondaryPreviews,
+      show_status: isShow ? "show" : "not show",
     };
     await ProductService.updateProduct(data?._id, body);
     setIsLoading(false);
@@ -330,6 +370,7 @@ export function ModalUpdateProduct({ data }: { data: any }) {
       setDescriptionJP(data?.japan_description);
       setMainPreview(data?.main_image);
       setSecondaryPreviews(data?.side_images);
+      setIsShow(data?.show_status === "show");
     }
   };
 
@@ -463,7 +504,19 @@ export function ModalUpdateProduct({ data }: { data: any }) {
             </div>
           </div>
           <div className="col-span-2">
-            <div className="flex flex-col justify-start items-start gap-2 overflow-y-auto max-h-[70vh] pr-0 scroll-bar-style">
+            <div className="pl-4 flex flex-col justify-start items-start gap-2 overflow-y-auto max-h-[70vh] pr-0 scroll-bar-style">
+              <Label htmlFor="isShow" className="text-[14.5px] mt-2">
+                Hiện sản phẩm lên trang chính
+              </Label>
+              <div className="w-full grid items-center gap-4">
+                <input
+                  type="checkbox"
+                  id="isShow"
+                  className="switch"
+                  checked={isShow}
+                  onChange={(e) => setIsShow(e.target.checked)}
+                />
+              </div>
               <Label htmlFor="description" className="text-[14.5px]">
                 Tên sản phẩm tiếng Việt
               </Label>
