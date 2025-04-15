@@ -348,6 +348,7 @@ export function ModalUpdateProduct({ data }: { data: any }) {
     };
     await ProductService.updateProduct(data?._id, body);
     setIsLoading(false);
+
     window.location.href = "/";
   };
 
